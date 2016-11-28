@@ -32,218 +32,399 @@ To obtain an access token, the client must make a request to the token endpoint
 
 Requires `email` and `password` as params. This route will return a JSON representation of the User model on successful login along with the access-token and client in the header of the response.
 
-with the following headers:
+Sample Request:
+```
+curl -X POST
+     -H "Content-Type: application/json"
+     -d '{
+       "email": "client@klaseko.com",
+       "password": "password"
+     }' "http://api.localhost.com/auth/sign_in"
+```
+Response:
 
-Header          | Value
-----------------|--------------------------
-`Client-Key`    | f17bac0022c9204976040...
-`Client-Secret` | 0022e410eedf3cc252153...
-`Redirect-URI`  | https://client/redirect/uri
+| Header | Value |
+|-------|--------|
+| Access-Token | v4UIjjS0b0VgGOGVmqrv9g |
+| Client | SPQrt4_3q0WlMsLPlbtssg |
+| Expiry | 1480417124 |
+| Token-Type | Bearer |
+| Uid | client@klaseko.com |
 
-> NOTE: Client `redirect_uri`s should ideally be SSL/TLS
-
-## Resources
-
-#### Activities
-Activities are generated whenever a `Venue`, `Program`, `VenueProgram`, or `Schedule` is `created`, `updated`, or `deleted`.
-
-| Attribute   | Type     | Description                                          |
-|-------------|----------|------------------------------------------------------|
-| school_id   | integer  | Foreign key                                          |
-| venue_id    | integer  | Foreign key                                          |
-| agent       | string   | User who performed the action.                       |
-| resource    | string   | Resource that was `created` / `updated` / `deleted`. |
-| identifier  | string   | Resource's identifier. Example is name of venue.     |
-| action      | string   | The action performed on the resource.                |
-
-Example Response
 ```json
 {
-  "id": 81,
-  "school_id": 1218,
-  "venue_id": 626,
-  "agent": "Francis Borbe",
-  "resource": "Venue",
-  "identifier": "3202 Church Street",
-  "action": "updated",
-  "created_at": "Tue, 22 Nov 2016 15:00:45 PHT +08:00",
-  "updated_at": "Tue, 22 Nov 2016 15:00:45 PHT +08:00"
+  "data": {
+    "uid": "client@klaseko.com",
+    "name": "Klaseko Enroll Client",
+    "image": "https://s3.amazonaws.com/asdkj32/ashaf.jpg",
+    "email": "client@klaseko.com"
+  }
 }
 ```
 
-#### Discounts
-| Attribute     | Type     | Description                                      |
-|---------------|----------|--------------------------------------------------|
-| enrollment_id | integer  | Foreign key                                      |
-| amount        | decimal  | Total discount.                                  |
-| kind          | string   | Type of discount.                                |
-| remarks       | text     | Additional information about the discount.       |
+## Requests
+All request to the API must contain `access-token`, `client`, `token-type`, and `uid` that was returned by the API after sign in.
 
-Example Response
+## Getting School Information
+
+### Side Loading
+You may include related resources in one API call by using the `include` URL param. See example below.
+
+### Schools
+
+`GET /v1/schools` returns a list of all schools
+
+`GET /v1/schools/:slug` returns details about a school given a slug or id.
+
+**Example:**
+
+`GET /v1/schools/webenrollments?include=venues,programs`
+
 ```json
 {
-  "id": 22,
-  "enrollment_id": 198,
-  "amount": 250,
-  "kind": "venue_program",
-  "remarks": "Early Bird discount.",
-  "created_at": "Wed, 23 Nov 2016 03:22:51 PHT +08:00",
-  "updated_at": "Wed, 23 Nov 2016 03:22:51 PHT +08:00"
-}
-```
+  "school":{
+    "name":"Yamaha Music School",
+    "nickname":"yamahamusicschooltest",
 
-#### Enrollees
-| Attribute        | Type     | Description                                    |
-|------------------|----------|------------------------------------------------|
-| school_id        | integer  | Foreign key                                    |
-| venue_id         | integer  | Foreign key                                    |
-| program_id       | integer  | Foreign key                                    |
-| venue_program_id | integer  | Foreign key                                    |
-| schedule_id      | integer  | Foreign key                                    |
-| enrollment_id    | integer  | Foreign key                                    |
-| birthdate        | date     | Enrollee's date of birth                       |
-| gender           | string   | Gender.                                        |
-| status           | string   | Enrollee's status.                             |
-| info             | array    | An array of additional enrollee's information. |
-| fees             | array    | Array of fees charged to the enrollee.         |
-| total            | decimal  | Total amount of fees.                          |
-| first_name       | string   | Enrollee's given name.                         |
-| last_name        | string   | Enrollee's family name.                        |
-| start_date       | date     | Day the enrollee will start class.             |
-| days             | array    | Class days.                                    |
-| dates            | array    | Class dates.                                   |
+    ...
 
-Example Response
-```json
-{
-  "id": 12,
-  "school_id": 1218,
-  "venue_id": 626,
-  "program_id": null,
-  "venue_program_id": 305,
-  "course_id": null,
-  "schedule_id": 259,
-  "enrollment_id": 198,
-  "birthdate": "Tue, 08 Jan 1991",
-  "gender": "male",
-  "status": null,
-  "info": null,
-  "fees": {
-    "venue_program": "35000.0",
-    "registration_fee": 0.0
+    "venues":[
+      { "name":"Buendia cor. Reposo", ... },
+      { "name":"Manila Branch", ... }
+    ],
+    "programs":[
+      { "name":"Guitar 101", ... },
+      { "name":"Piano Basics", ... }
+    ]
   },
-  "total": 35000.0,
-  "first_name": "Francis",
-  "last_name": "Borbe",
-  "start_date": "Mon, 21 Nov 2016",
-  "days": ["mon", "tue", "wed", "thu", "fri"],
-  "dates": [
-    "2016-11-21",
-    "2016-11-22",
-    "2016-11-23",
-    "2016-11-24",
-    "2016-11-25",
-    "2016-11-28",
-    "2016-11-29",
-    "2016-11-30",
-    "2016-12-01",
-    "2016-12-02"
-  ]
+  "status":"success"
 }
-
 ```
+> Some of the data has been concatenated for brevity and simplicity of the documentation.
 
-#### Enrollments
-| Attribute        | Type     | Description                                       |
-|------------------|----------|---------------------------------------------------|
-| school_id        | integer  | Foreign key                                       |
-| venue_id         | integer  | Foreign key                                       |
-| program_id       | integer  | Foreign key                                       |
-| venue_program_id | integer  | Foreign key                                       |
-| token            | string   | A hashed string based on the mobile no and email. |
-| ref_no           | string   | Unique identifier used for tracking enrollments.  |
-| total            | decimal  | Total amount due of the enrollment.               |
-| info             | array    | Additional information based on school's custom field.|
-| email            | string   | Email used in the enrollment form. |
-| status           | string   | Enrollment's status based on payment. |
-| fields           | array    | For deprecation. |
-| mobile_no        | string   | Mobile number used in enrollment form. |
-| amount_paid      | decimal  | Accumulated amount paid. |
-| balance          | decimal  | Total amount due less amount paid and discount. |
-| discount         | decimal  | Total discount. |
-| expiration       | date     | Date of expiration. |
-| slug             | string   | URL-safe ref_no. |
-| fees             | array    | Array of additional fees, such as registration fee.|
-| confirmed_at     | date     | Date the enrollment was completely paid. |
-| payment_method   | string   | How the enrollment was settled. Either Online or on Onsite / Venue. |
-| enrolled_at      | date     | Date when enrollment was created. |
-| source           | string   | Where the enrollee enrolled. Either online or at the venue. |
-| expired          | boolean  | `true` when no payment was made after expiration date, otherwise, `false`. |
 
-Example Response
+### Venues
+
+`GET /v1/venues` returns a list of all venues
+
+`GET /v1/venues/:slug` returns details about a venue given a slug or id.
+
+**Example:**
+
+`GET /v1/venues/buendia-cor-reposo?include=venue_programs,schedules,schedule_records,programs,holidays`
+
 ```json
 {
-  "id": 198,
-  "school_id": 1218,
-  "venue_id": 626,
-  "program_id": null,
-  "course_id": null,
-  "venue_program_id": null,
-  "token": "c2830a75b36b8",
-  "ref_no": "1LEAV1",
-  "total": 35000.00,
-  "info": null,
-  "email": "francis@klaseko.com",
-  "status": "confirmed",
-  "fields": null,
-  "mobile_no": "09361000478",
-  "amount_paid": 0.00,
-  "balance": 35000.00,
-  "discount": 0.0,
-  "expiration": "Wed, 16 Nov 2016 18:21:13 PHT +08:00",
-  "slug": "1leav1",
-  "fees": {},
-  "confirmed_at": "Wed, 16 Nov 2016 18:06:33 PHT +08:00",
-  "payment_method": "venue",
-  "enrolled_at": "Wed, 16 Nov 2016 18:06:13 PHT +08:00",
-  "source": "venue",
-  "expired": false
-}
+  "venue":{
+    "name":"Buendia cor. Reposo",
 
+    ...
+
+    "venue_programs":[
+      {
+        "venue_id":100,
+        "program_id":168,
+        "sessions":20,
+        "session_length":1,
+        "price":"2000.0",
+        "unit_time":"hours",
+        "discounted":false,
+        "discounts":[
+
+        ],
+        "deleted_at":null
+      },
+      {
+        "venue_id":100,
+        "program_id":173,
+        "sessions":20,
+        "session_length":1,
+        "price":"5000.0",
+        "unit_time":"hours",
+        "discounted":false,
+        "discounts":[
+
+        ],
+        "deleted_at":null
+      }
+    ],
+    "schedules":[
+      {
+        "start_date":"2016-11-14",
+        "end_date":"2016-12-09",
+        "start_time":"2000-01-01T06:00:00.000Z",
+        "end_time":"2000-01-01T07:00:00.000Z",
+        "days":[
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri"
+        ],
+        "max_students":20,
+        "settings":{
+          "color":{
+            "value":"rgb(81, 183, 73)"
+          },
+          "name":{
+            "value":"Piano Basics"
+          }
+        },
+        "active":true,
+        "kind":"batched",
+        "venue_program_id":188,
+        "slots_available":20,
+      },
+      {
+        "start_date":"2016-11-07",
+        "end_date":"2016-12-21",
+        "start_time":"2000-01-01T05:00:00.000Z",
+        "end_time":"2000-01-01T06:00:00.000Z",
+        "days":[
+          "mon",
+          "wed",
+          "fri"
+        ],
+        "max_students":20,
+        "settings":{
+          "color":{
+            "value":"teal"
+          },
+          "name":{
+            "value":"Guitar 101"
+          }
+        },
+        "active":true,
+        "kind":"batched",
+        "venue_program_id":183,
+        "slots_available":20,
+      }
+    ],
+  },
+  "status":"success"
+}
 ```
 
-#### Holidays
-| Attribute   | Type     | Description                                          |
-|-------------|----------|------------------------------------------------------|
+## Refreshing Schedules
 
-#### Payments
-| Attribute   | Type     | Description                                          |
-|-------------|----------|------------------------------------------------------|
+A schedule's available slots will change as enrollments are coming in, you may want to refresh
+the schedules that are being displayed on your platform.
 
-#### Programs
-| Attribute   | Type     | Description                                          |
-|-------------|----------|------------------------------------------------------|
+`GET /venue_programs/:venue_program_id/available_schedules` will return schedules with available schedules.
 
-#### Schedules
-| Attribute   | Type     | Description                                          |
-|-------------|----------|------------------------------------------------------|
+**Sample Request**
 
-#### Schools
-| Attribute   | Type     | Description                                          |
-|-------------|----------|------------------------------------------------------|
+`GET /v1/venue_programs/188/available_schedules`
 
-#### Users
-| Attribute   | Type     | Description                                          |
-|-------------|----------|------------------------------------------------------|
+**Response**
+```json
+{
+  "schedules":[
+    {
+      "start_date":"2016-11-14",
+      "end_date":"2016-12-09",
+      "start_time":"2000-01-01T06:00:00.000Z",
+      "end_time":"2000-01-01T07:00:00.000Z",
+      "days":[
+        "mon",
+        "tue",
+        "wed",
+        "thu",
+        "fri"
+      ],
+      "max_students":20,
+      "settings":{
+        "color":{
+          "value":"rgb(81, 183, 73)"
+        },
+        "name":{
+          "value":"Piano Basics"
+        }
+      },
+      "active":true,
+      "kind":"batched",
+      "venue_program_id":188,
+      "slots_available":20,
+    }
+  ],
+  "status":"success"
+}
+```
 
-#### VenuePrograms
-| Attribute   | Type     | Description                                          |
-|-------------|----------|------------------------------------------------------|
+With all these information, you can now proceed to create an enrollment.
 
-#### VenueUsers
-| Attribute   | Type     | Description                                          |
-|-------------|----------|------------------------------------------------------|
+## Enrollments
+New Enrollment
 
-#### Venues
-| Attribute   | Type     | Description                                          |
-|-------------|----------|------------------------------------------------------|
+Required fields:
+- school_id
+- venue_id
+- email
+- mobile_no
+- source
+
+> Use 'online' as value for source.
+
+Non-required fields:
+- info
+
+**Sample Payload:**
+
+`POST /v1/enrollments`
+```json
+{
+  "enrollment": {
+    "school_id":108,
+    "venue_id":100,
+    "source":"online",
+    "info":[],
+    "email":"gerard@klaseko.com",
+    "mobile_no":"09166200691"
+  }
+}
+```
+
+**Response**
+```json
+{
+  "enrollment":{
+    "id":863,
+    "school_id":108,
+    "venue_id":100,
+    "program_id":null,
+    "course_id":null,
+    "venue_program_id":null,
+    "token":"0878457770a16",
+    "ref_no":"KL1XW3S",
+    "total":"0.0",
+    "info":null,
+    "email":"gerard@klaseko.com",
+    "status":"new",
+    "fields":null,
+    "mobile_no":"09166200691",
+    "amount_paid":"0.0",
+    "balance":"0.0",
+    "discount":"0.0",
+    "expiration":"2016-11-28T19:32:08.133+08:00",
+    "created_at":"2016-11-28T19:17:08.151+08:00",
+    "updated_at":"2016-11-28T19:17:08.151+08:00",
+    "slug":"kl1xw3s",
+    "fees":{
+
+    },
+    "confirmed_at":null,
+    "payment_method":null,
+    "enrolled_at":"2016-11-28T19:17:08.133+08:00",
+    "source":"online",
+    "expired":false
+  },
+  "status":"success"
+}
+```
+
+## Enrollees
+New Enrollee
+
+`POST /v1/enrollees`
+
+Required Fields:
+- school_id
+- venue_id
+- enrollment_id
+- venue_program_id
+- schedule_id
+- first_name
+- last_name
+- birthdate
+- gender
+- start_date
+- days
+
+An enrollee needs a related enrollment. Pass the `enrollment_id` of the previously created enrollment.
+
+**Sample Payload:**
+```json
+{
+  "enrollee":{
+    "school_id":108,
+    "venue_id":100,
+    "enrollment_id":863,
+    "start_date":"2016-11-07",
+    "days":[
+      "mon",
+      "wed",
+      "fri"
+    ],
+    "info":[
+
+    ],
+    "birthdate":"1996-04-19T00:00:00+08:00",
+    "first_name":"Gerard",
+    "last_name":"Cruz",
+    "gender":"male",
+    "venue_program_id":183,
+    "schedule_id":271,
+    "id":830
+  }
+}
+```
+
+**Response**
+```json
+{
+  "enrollee":{
+    "id":830,
+    "school_id":108,
+    "venue_id":100,
+    "program_id":null,
+    "venue_program_id":183,
+    "course_id":null,
+    "schedule_id":271,
+    "enrollment_id":863,
+    "birthdate":"1996-04-19",
+    "gender":"male",
+    "status":null,
+    "info":null,
+    "fees":{
+      "venue_program":"2000.0",
+      "registration_fee":0.0
+    },
+    "total":"2000.0",
+    "first_name":"Gerard",
+    "last_name":"Cruz",
+    "start_date":"2016-11-07",
+    "days":[
+      "mon",
+      "wed",
+      "fri"
+    ],
+    "created_at":"2016-11-28T19:21:11.983+08:00",
+    "updated_at":"2016-11-28T19:21:25.081+08:00",
+    "klaseko_id":"yamahamusicschooltest2016264095",
+    "slug":"yamahamusicschooltest2016264095",
+    "dates":[
+      "2016-11-07",
+      "2016-11-09",
+      "2016-11-11",
+      "2016-11-14",
+      "2016-11-16",
+      "2016-11-18",
+      "2016-11-21",
+      "2016-11-23",
+      "2016-11-25",
+      "2016-11-28",
+      "2016-11-30",
+      "2016-12-02",
+      "2016-12-05",
+      "2016-12-07",
+      "2016-12-09",
+      "2016-12-12",
+      "2016-12-14",
+      "2016-12-16",
+      "2016-12-19",
+      "2016-12-21"
+    ]
+  },
+  "status":"success"
+}
+```
