@@ -1,17 +1,46 @@
 # API Reference
 
-## Introduction
+## Client Documentation
+The Klaseko API has two (2) environments `staging` and `production`.
+The following endpoints address our two environments:
+* **Staging** (for testing): `https://api-test.klaseko.com`
+* **Production** (live transactions): `https://api.klaseko.com`
 
-```
-API Endpoints
-Live: https://api.klaseko.com
-Test: https://api-test.klaseko.com
+The client must make an HTTP request with the corresponding HTTP method (or "verb") to the endpoint that the client needs. For example, this is what a new payment operation will look like:
 
-```
+`POST https://api.klaseko.com/enrollment`
 
-## Topics
-- Authentication
-- Errors
+For the request to be complete, make sure the client has the appropriate HTTP headers and a valid JSON payload.
+
+
+
+### Authentication & Headers
+
+The Klaseko Payment Switch API uses [OAuth 2.0](https://oauth.net/2/). It is a web standard authorization framework/protocol described in [RFC 6749](https://tools.ietf.org/html/rfc6749). Klaseko will be providing all authorized clients with a `username` and `password`.
+
+The client must use their username and password to obtain an access token.
+
+#### Obtaining a username and password
+Klaseko's API is currently in a closed beta. It is only open to select merchants and clients. Please contact us if you would like to connect.
+
+#### Obtaining an access token
+Access tokens are credentials used to access protected resources.  An access token is a string representing an authorization issued to the client. ([source](https://tools.ietf.org/html/rfc6749#section-1.4))
+
+To obtain an access token, the client must make a request to the token endpoint
+
+`POST https://api.klaseko.com/auth/sign_in`
+
+Requires `email` and `password` as params. This route will return a JSON representation of the User model on successful login along with the access-token and client in the header of the response.
+
+with the following headers:
+
+Header          | Value
+----------------|--------------------------
+`Client-Key`    | f17bac0022c9204976040...
+`Client-Secret` | 0022e410eedf3cc252153...
+`Redirect-URI`  | https://client/redirect/uri
+
+> NOTE: Client `redirect_uri`s should ideally be SSL/TLS
 
 ## Resources
 
